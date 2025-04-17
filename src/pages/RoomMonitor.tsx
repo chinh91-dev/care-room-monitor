@@ -13,9 +13,14 @@ import {
   getLatestRoomData, 
   getEmployeesInRoom, 
   getRoomById,
-  getEmployeeById
+  getEmployeeById,
+  updateRoomData,
+  updateStaffPresence,
+  isEmployeeInAnyRoom,
+  getEmployeeCurrentRoom
 } from '../data/mockData';
 import { formatDate } from '../utils/roomUtils';
+import { toast } from 'sonner';
 
 const RoomMonitor: React.FC = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -25,7 +30,6 @@ const RoomMonitor: React.FC = () => {
   const [roomData, setRoomData] = useState(getLatestRoomData(roomId || '1'));
   const [staff, setStaff] = useState(getEmployeesInRoom(roomId || '1'));
   const [hasAccess, setHasAccess] = useState(true);
-  const [notification, setNotification] = useState('');
 
   useEffect(() => {
     if (!roomId) {
@@ -35,7 +39,7 @@ const RoomMonitor: React.FC = () => {
 
     const selectedRoom = getRoomById(roomId);
     if (!selectedRoom) {
-      navigate('/rooms/1');
+      navigate('/rooms');
       return;
     }
 
@@ -44,7 +48,7 @@ const RoomMonitor: React.FC = () => {
     setHasAccess(hasRoomAccess);
     
     if (!hasRoomAccess) {
-      setNotification('Access denied. This device is not authorized for this room.');
+      toast.error('Access denied. This device is not authorized for this room.');
       return;
     }
 
@@ -56,14 +60,19 @@ const RoomMonitor: React.FC = () => {
 
   const handleFormSubmit = (formData: RoomUpdateFormType) => {
     // In a real app, this would send data to the server/database
-    // For this demo, we'll update our local state to simulate the change
-    
     const currentDate = new Date();
     const updatedEmployee = getEmployeeById(formData.employeeId);
     const updatedRoom = getRoomById(formData.roomId);
     
     if (!updatedEmployee || !updatedRoom) {
-      setNotification('Error: Employee or room not found');
+      toast.error('Error: Employee or room not found');
+      return;
+    }
+    
+    // Check for duplicate staff
+    if (formData.status === StatusType.ENTER && isEmployeeInAnyRoom(formData.employeeId)) {
+      const currentRoom = getEmployeeCurrentRoom(formData.employeeId);
+      toast.error(`${updatedEmployee.name} is already in the ${currentRoom?.name} Room.`);
       return;
     }
     
@@ -88,6 +97,8 @@ const RoomMonitor: React.FC = () => {
     };
     
     // In a real app, these would be API calls to update the database
+    updateRoomData(newRoomData);
+    updateStaffPresence(newStaffEntry);
     
     // Update local state
     setRoomData(newRoomData);
@@ -96,11 +107,11 @@ const RoomMonitor: React.FC = () => {
     if (formData.status === StatusType.ENTER) {
       // Add staff member if entering
       setStaff(prev => [...prev, newStaffEntry]);
-      setNotification(`${updatedEmployee.name} has entered the room.`);
+      toast.success(`${updatedEmployee.name} has entered the ${updatedRoom.name} Room.`);
     } else {
       // Remove staff member if exiting
       setStaff(prev => prev.filter(emp => emp.employeeId !== formData.employeeId));
-      setNotification(`${updatedEmployee.name} has exited the room.`);
+      toast.success(`${updatedEmployee.name} has exited the ${updatedRoom.name} Room.`);
     }
   };
 
@@ -128,10 +139,10 @@ const RoomMonitor: React.FC = () => {
             <h1 className="text-2xl font-bold mb-4">Room Not Found</h1>
             <p className="mb-4">The requested room does not exist.</p>
             <button
-              onClick={() => navigate('/rooms/1')}
+              onClick={() => navigate('/rooms')}
               className="px-4 py-2 bg-care-brightGreen hover:bg-care-hoverGreen rounded-md"
             >
-              Go to Default Room
+              Go to Rooms List
             </button>
           </div>
         </div>
@@ -142,12 +153,6 @@ const RoomMonitor: React.FC = () => {
   return (
     <div className="min-h-screen bg-care-green text-white p-6">
       <div className="max-w-xl mx-auto">
-        {notification && (
-          <div className="mb-4 p-3 bg-care-lightGreen rounded-lg">
-            {notification}
-          </div>
-        )}
-        
         <div className="mb-4">
           <button 
             onClick={() => navigate('/rooms')}

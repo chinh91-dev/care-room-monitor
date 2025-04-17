@@ -4,28 +4,28 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 130 35% 25%; /* #2c5e35 - main green */
+    --foreground: 0 0% 100%; /* White text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card: 134 36% 19%; /* #1e4025 - dark green */
+    --card-foreground: 0 0% 100%; /* White text */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover: 134 36% 19%; /* #1e4025 - dark green */
+    --popover-foreground: 0 0% 100%; /* White text */
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 122 42% 40%; /* #4CAF50 - bright green */
+    --primary-foreground: 0 0% 100%; /* White text */
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 130 26% 35%; /* #397242 - light green */
+    --secondary-foreground: 0 0% 100%; /* White text */
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 130 26% 35%; /* #397242 - light green */
+    --muted-foreground: 0 0% 88%; /* #e0e0e0 - light text */
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 130 20% 37%; /* #4a7553 - accent green */
+    --accent-foreground: 0 0% 100%; /* White text */
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84.2% 60.2%; /* Keep original red */
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;

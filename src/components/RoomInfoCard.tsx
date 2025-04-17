@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { RoomData } from '../types';
+import { format } from 'date-fns';
 
 interface RoomInfoCardProps {
   roomData: RoomData | undefined;
@@ -15,6 +16,12 @@ const RoomInfoCard: React.FC<RoomInfoCardProps> = ({ roomData }) => {
       </div>
     );
   }
+
+  // Format Melbourne time
+  const melbourneTime = new Date();
+  // UTC+10 for Melbourne (not accounting for daylight saving)
+  melbourneTime.setHours(melbourneTime.getHours() + 10);
+  const melbourneTimeString = format(melbourneTime, 'dd MMM yyyy, h:mm a');
 
   return (
     <div className="bg-care-darkGreen rounded-lg p-6 mb-6">
@@ -32,8 +39,13 @@ const RoomInfoCard: React.FC<RoomInfoCardProps> = ({ roomData }) => {
         </div>
       </div>
       
-      <div className="text-right text-care-paleGreen text-sm italic mt-4">
-        Last Updated: {roomData.timestamp}
+      <div className="text-right mt-4">
+        <div className="text-care-paleGreen text-sm italic">
+          Last Updated: {roomData.timestamp}
+        </div>
+        <div className="text-care-paleGreen text-sm italic">
+          Melbourne, Australia: {melbourneTimeString}
+        </div>
       </div>
     </div>
   );

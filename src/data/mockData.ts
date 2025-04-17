@@ -1,4 +1,3 @@
-
 import { Employee, Room, RoomData, EnteredEmployee, StatusType } from '../types';
 import { formatDate } from '../utils/roomUtils';
 
@@ -51,101 +50,44 @@ export const rooms: Room[] = [
   { id: '4', name: 'Eucalyptus', macAddress: 'DD:EE:FF:00:11:22' },
 ];
 
-// Initial room data
+// Initial room data with zero children
 export const roomData: RoomData[] = [
   {
     id: '1',
     roomId: '1',
     roomName: 'Wattle',
-    childrenOver3: 12,
-    childrenUnder3: 8,
-    timestamp: formatDate(new Date(Date.now() - 1000 * 60 * 30)), // 30 minutes ago
+    childrenOver3: 0,
+    childrenUnder3: 0,
+    timestamp: formatDate(new Date()),
   },
   {
     id: '2',
     roomId: '2',
     roomName: 'Waratah',
-    childrenOver3: 15,
+    childrenOver3: 0,
     childrenUnder3: 0,
-    timestamp: formatDate(new Date(Date.now() - 1000 * 60 * 15)), // 15 minutes ago
+    timestamp: formatDate(new Date()),
   },
   {
     id: '3',
     roomId: '3',
     roomName: 'Jacaranda',
     childrenOver3: 0,
-    childrenUnder3: 12,
-    timestamp: formatDate(new Date(Date.now() - 1000 * 60 * 5)), // 5 minutes ago
+    childrenUnder3: 0,
+    timestamp: formatDate(new Date()),
   },
   {
     id: '4',
     roomId: '4',
     roomName: 'Eucalyptus',
-    childrenOver3: 10,
-    childrenUnder3: 6,
-    timestamp: formatDate(new Date(Date.now() - 1000 * 60 * 10)), // 10 minutes ago
+    childrenOver3: 0,
+    childrenUnder3: 0,
+    timestamp: formatDate(new Date()),
   }
 ];
 
-// Initial staff assignments
-export const enteredEmployees: EnteredEmployee[] = [
-  {
-    id: '1',
-    employeeId: '1',
-    employeeName: 'Sally Young',
-    roomId: '1',
-    status: StatusType.ENTER,
-    timestamp: formatDate(new Date(Date.now() - 1000 * 60 * 120)), // 2 hours ago
-  },
-  {
-    id: '2',
-    employeeId: '2',
-    employeeName: 'Diane Duncan',
-    roomId: '1',
-    status: StatusType.ENTER,
-    timestamp: formatDate(new Date(Date.now() - 1000 * 60 * 90)), // 1.5 hours ago
-  },
-  {
-    id: '3',
-    employeeId: '3',
-    employeeName: 'Sheridan Corke',
-    roomId: '2',
-    status: StatusType.ENTER,
-    timestamp: formatDate(new Date(Date.now() - 1000 * 60 * 60)), // 1 hour ago
-  },
-  {
-    id: '4',
-    employeeId: '4',
-    employeeName: 'Anna Feleppa',
-    roomId: '3',
-    status: StatusType.ENTER,
-    timestamp: formatDate(new Date(Date.now() - 1000 * 60 * 45)), // 45 minutes ago
-  },
-  {
-    id: '5',
-    employeeId: '5',
-    employeeName: 'Bahini Paint',
-    roomId: '3',
-    status: StatusType.ENTER,
-    timestamp: formatDate(new Date(Date.now() - 1000 * 60 * 30)), // 30 minutes ago
-  },
-  {
-    id: '6',
-    employeeId: '6',
-    employeeName: 'Niki Shah',
-    roomId: '4',
-    status: StatusType.ENTER,
-    timestamp: formatDate(new Date(Date.now() - 1000 * 60 * 25)), // 25 minutes ago
-  },
-  {
-    id: '7',
-    employeeId: '7',
-    employeeName: 'Miro Yu',
-    roomId: '4',
-    status: StatusType.ENTER,
-    timestamp: formatDate(new Date(Date.now() - 1000 * 60 * 20)), // 20 minutes ago
-  },
-];
+// Initial staff assignments (empty)
+export const enteredEmployees: EnteredEmployee[] = [];
 
 // Helper function to get the latest room data
 export const getLatestRoomData = (roomId: string): RoomData | undefined => {

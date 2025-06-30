@@ -59,13 +59,39 @@ const RoomMonitor: React.FC = () => {
   }, [roomId, navigate]);
 
   const handleFormSubmit = (formData: RoomUpdateFormType) => {
-    // In a real app, this would send data to the server/database
     const currentDate = new Date();
-    const updatedEmployee = getEmployeeById(formData.employeeId);
     const updatedRoom = getRoomById(formData.roomId);
     
-    if (!updatedEmployee || !updatedRoom) {
-      toast.error('Error: Employee or room not found');
+    if (!updatedRoom) {
+      toast.error('Error: Room not found');
+      return;
+    }
+
+    // Handle children-only updates
+    if (formData.employeeId === 'children-only') {
+      // Update room data only
+      const newRoomData = {
+        id: `${Date.now()}`,
+        roomId: formData.roomId,
+        roomName: updatedRoom.name,
+        childrenOver3: formData.childrenOver3,
+        childrenUnder3: formData.childrenUnder3,
+        timestamp: formatDate(currentDate),
+      };
+      
+      updateRoomData(newRoomData);
+      setRoomData(newRoomData);
+      
+      const totalChildren = formData.childrenOver3 + formData.childrenUnder3;
+      toast.success(`Children count updated: ${totalChildren} children in ${updatedRoom.name} Room.`);
+      return;
+    }
+
+    // Handle staff updates (existing logic)
+    const updatedEmployee = getEmployeeById(formData.employeeId);
+    
+    if (!updatedEmployee) {
+      toast.error('Error: Employee not found');
       return;
     }
     
@@ -78,7 +104,7 @@ const RoomMonitor: React.FC = () => {
     
     // Update room data
     const newRoomData = {
-      id: `${Date.now()}`, // Generate unique ID for demo
+      id: `${Date.now()}`,
       roomId: formData.roomId,
       roomName: updatedRoom.name,
       childrenOver3: formData.childrenOver3,
@@ -96,7 +122,7 @@ const RoomMonitor: React.FC = () => {
       timestamp: formatDate(currentDate),
     };
     
-    // In a real app, these would be API calls to update the database
+    // Update data
     updateRoomData(newRoomData);
     updateStaffPresence(newStaffEntry);
     
@@ -105,11 +131,9 @@ const RoomMonitor: React.FC = () => {
     
     // Update staff list
     if (formData.status === StatusType.ENTER) {
-      // Add staff member if entering
       setStaff(prev => [...prev, newStaffEntry]);
       toast.success(`${updatedEmployee.name} has entered the ${updatedRoom.name} Room.`);
     } else {
-      // Remove staff member if exiting
       setStaff(prev => prev.filter(emp => emp.employeeId !== formData.employeeId));
       toast.success(`${updatedEmployee.name} has exited the ${updatedRoom.name} Room.`);
     }

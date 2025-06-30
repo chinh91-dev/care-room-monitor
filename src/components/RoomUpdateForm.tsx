@@ -32,6 +32,7 @@ const RoomUpdateForm: React.FC<RoomUpdateFormProps> = ({
   const [validationMessage, setValidationMessage] = useState<string>('');
   const [isValid, setIsValid] = useState<boolean>(true);
   const [staffError, setStaffError] = useState<string>('');
+  const [updateType, setUpdateType] = useState<'staff' | 'children'>('children');
 
   // Filter out employees who are already in other rooms if status is ENTER
   const availableEmployees = employees.filter(employee => {
@@ -76,10 +77,12 @@ const RoomUpdateForm: React.FC<RoomUpdateFormProps> = ({
   useEffect(() => {
     // Calculate the new staff count based on current form
     let newStaffCount = currentStaffCount;
-    if (status === StatusType.ENTER) {
-      newStaffCount += 1;
-    } else if (status === StatusType.EXIT && currentStaffCount > 0) {
-      newStaffCount -= 1;
+    if (updateType === 'staff') {
+      if (status === StatusType.ENTER) {
+        newStaffCount += 1;
+      } else if (status === StatusType.EXIT && currentStaffCount > 0) {
+        newStaffCount -= 1;
+      }
     }
 
     const { isValid, message } = validateEducatorChildRatio(
@@ -90,24 +93,26 @@ const RoomUpdateForm: React.FC<RoomUpdateFormProps> = ({
 
     setIsValid(isValid);
     setValidationMessage(message);
-  }, [status, over3Count, under3Count, currentStaffCount]);
+  }, [status, over3Count, under3Count, currentStaffCount, updateType]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!employeeId) {
-      // Don't submit if no employee is selected
-      return;
-    }
-    
-    // Submit even if not valid, but show warning
-    onSubmit({
+    // If updating children only, use a dummy employee ID (we'll handle this in the parent)
+    const formData = {
       status,
-      employeeId,
+      employeeId: updateType === 'children' ? 'children-only' : employeeId,
       roomId,
       childrenOver3: over3Count,
       childrenUnder3: under3Count,
-    });
+    };
+
+    // Only require employee selection for staff updates
+    if (updateType === 'staff' && !employeeId) {
+      return;
+    }
+    
+    onSubmit(formData);
   };
 
   return (
@@ -117,41 +122,59 @@ const RoomUpdateForm: React.FC<RoomUpdateFormProps> = ({
       </h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Status */}
+        {/* Update Type Selection */}
         <div>
-          <label className="block text-care-lightText mb-2">Status</label>
+          <label className="block text-care-lightText mb-2">What would you like to update?</label>
           <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as StatusType)}
+            value={updateType}
+            onChange={(e) => setUpdateType(e.target.value as 'staff' | 'children')}
             className="w-full p-3 bg-care-green text-white rounded-md border border-care-accentGreen focus:border-care-brightGreen focus:outline-none focus:ring-1 focus:ring-care-brightGreen"
           >
-            <option value={StatusType.ENTER}>Enter</option>
-            <option value={StatusType.EXIT}>Exit</option>
+            <option value="children">Children Count Only</option>
+            <option value="staff">Staff Entry/Exit</option>
           </select>
         </div>
-        
-        {/* Employee Name */}
-        <div>
-          <label className="block text-care-lightText mb-2">Employee Name</label>
-          {staffError ? (
-            <div className="p-3 bg-yellow-800 text-yellow-100 rounded-md mb-2">
-              {staffError}
+
+        {/* Staff-specific fields */}
+        {updateType === 'staff' && (
+          <>
+            {/* Status */}
+            <div>
+              <label className="block text-care-lightText mb-2">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as StatusType)}
+                className="w-full p-3 bg-care-green text-white rounded-md border border-care-accentGreen focus:border-care-brightGreen focus:outline-none focus:ring-1 focus:ring-care-brightGreen"
+              >
+                <option value={StatusType.ENTER}>Enter</option>
+                <option value={StatusType.EXIT}>Exit</option>
+              </select>
             </div>
-          ) : (
-            <select
-              value={employeeId}
-              onChange={(e) => setEmployeeId(e.target.value)}
-              className="w-full p-3 bg-care-green text-white rounded-md border border-care-accentGreen focus:border-care-brightGreen focus:outline-none focus:ring-1 focus:ring-care-brightGreen"
-              disabled={availableEmployees.length === 0}
-            >
-              {availableEmployees.map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.name}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+            
+            {/* Employee Name */}
+            <div>
+              <label className="block text-care-lightText mb-2">Employee Name</label>
+              {staffError ? (
+                <div className="p-3 bg-yellow-800 text-yellow-100 rounded-md mb-2">
+                  {staffError}
+                </div>
+              ) : (
+                <select
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  className="w-full p-3 bg-care-green text-white rounded-md border border-care-accentGreen focus:border-care-brightGreen focus:outline-none focus:ring-1 focus:ring-care-brightGreen"
+                  disabled={availableEmployees.length === 0}
+                >
+                  {availableEmployees.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </>
+        )}
         
         {/* Room Name */}
         <div>
@@ -204,9 +227,9 @@ const RoomUpdateForm: React.FC<RoomUpdateFormProps> = ({
         <button
           type="submit"
           className="w-full p-3 bg-care-brightGreen hover:bg-care-hoverGreen text-white rounded-md transition-colors"
-          disabled={availableEmployees.length === 0}
+          disabled={updateType === 'staff' && availableEmployees.length === 0}
         >
-          Update Room
+          {updateType === 'children' ? 'Update Children Count' : 'Update Staff & Children'}
         </button>
       </form>
     </div>

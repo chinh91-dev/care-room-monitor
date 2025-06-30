@@ -61,11 +61,36 @@ const RoomMonitor: React.FC = () => {
   const handleFormSubmit = (formData: RoomUpdateFormType) => {
     // In a real app, this would send data to the server/database
     const currentDate = new Date();
-    const updatedEmployee = getEmployeeById(formData.employeeId);
     const updatedRoom = getRoomById(formData.roomId);
     
-    if (!updatedEmployee || !updatedRoom) {
-      toast.error('Error: Employee or room not found');
+    if (!updatedRoom) {
+      toast.error('Error: Room not found');
+      return;
+    }
+
+    // Handle children-only updates
+    if (!formData.employeeId) {
+      // This is a children count only update
+      const newRoomData = {
+        id: `${Date.now()}`, // Generate unique ID for demo
+        roomId: formData.roomId,
+        roomName: updatedRoom.name,
+        childrenOver3: formData.childrenOver3,
+        childrenUnder3: formData.childrenUnder3,
+        timestamp: formatDate(currentDate),
+      };
+      
+      updateRoomData(newRoomData);
+      setRoomData(newRoomData);
+      toast.success(`Children count updated for ${updatedRoom.name} Room.`);
+      return;
+    }
+
+    // Handle staff updates
+    const updatedEmployee = getEmployeeById(formData.employeeId);
+    
+    if (!updatedEmployee) {
+      toast.error('Error: Employee not found');
       return;
     }
     

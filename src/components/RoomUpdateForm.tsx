@@ -32,6 +32,7 @@ const RoomUpdateForm: React.FC<RoomUpdateFormProps> = ({
   const [validationMessage, setValidationMessage] = useState<string>('');
   const [isValid, setIsValid] = useState<boolean>(true);
   const [staffError, setStaffError] = useState<string>('');
+  const [isChildrenOnlyUpdate, setIsChildrenOnlyUpdate] = useState<boolean>(false);
 
   // Filter out employees who are already in other rooms if status is ENTER
   const availableEmployees = employees.filter(employee => {
@@ -45,41 +46,46 @@ const RoomUpdateForm: React.FC<RoomUpdateFormProps> = ({
     }
   });
 
-  // Set default values
+  // Set default values only when room changes
   useEffect(() => {
     setRoomId(currentRoom.id);
-    if (availableEmployees.length > 0) {
-      setEmployeeId(availableEmployees[0].id);
-    } else {
-      setEmployeeId('');
+  }, [currentRoom.id]);
+
+  // Only reset children counts when props change and we're not in children-only mode
+  useEffect(() => {
+    if (!isChildrenOnlyUpdate) {
+      setOver3Count(childrenOver3);
+      setUnder3Count(childrenUnder3);
     }
-    setOver3Count(childrenOver3);
-    setUnder3Count(childrenUnder3);
-  }, [currentRoom.id, childrenOver3, childrenUnder3, availableEmployees, status]);
+  }, [childrenOver3, childrenUnder3, isChildrenOnlyUpdate]);
 
   // Update available employees when status changes
   useEffect(() => {
-    if (availableEmployees.length > 0) {
-      setEmployeeId(availableEmployees[0].id);
-      setStaffError('');
-    } else {
-      setEmployeeId('');
-      if (status === StatusType.ENTER) {
-        setStaffError('No available staff members to enter this room.');
+    if (!isChildrenOnlyUpdate) {
+      if (availableEmployees.length > 0) {
+        setEmployeeId(availableEmployees[0].id);
+        setStaffError('');
       } else {
-        setStaffError('No staff members currently in this room to exit.');
+        setEmployeeId('');
+        if (status === StatusType.ENTER) {
+          setStaffError('No available staff members to enter this room.');
+        } else {
+          setStaffError('No staff members currently in this room to exit.');
+        }
       }
     }
-  }, [status, availableEmployees]);
+  }, [status, availableEmployees, isChildrenOnlyUpdate]);
 
   // Validate the form whenever counts change
   useEffect(() => {
     // Calculate the new staff count based on current form
     let newStaffCount = currentStaffCount;
-    if (status === StatusType.ENTER) {
-      newStaffCount += 1;
-    } else if (status === StatusType.EXIT && currentStaffCount > 0) {
-      newStaffCount -= 1;
+    if (!isChildrenOnlyUpdate) {
+      if (status === StatusType.ENTER) {
+        newStaffCount += 1;
+      } else if (status === StatusType.EXIT && currentStaffCount > 0) {
+        newStaffCount -= 1;
+      }
     }
 
     const { isValid, message } = validateEducatorChildRatio(
@@ -90,20 +96,20 @@ const RoomUpdateForm: React.FC<RoomUpdateFormProps> = ({
 
     setIsValid(isValid);
     setValidationMessage(message);
-  }, [status, over3Count, under3Count, currentStaffCount]);
+  }, [status, over3Count, under3Count, currentStaffCount, isChildrenOnlyUpdate]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!employeeId) {
-      // Don't submit if no employee is selected
+    if (!isChildrenOnlyUpdate && !employeeId) {
+      // Don't submit if no employee is selected and it's not children-only update
       return;
     }
     
-    // Submit even if not valid, but show warning
+    // Submit the form data
     onSubmit({
-      status,
-      employeeId,
+      status: isChildrenOnlyUpdate ? StatusType.ENTER : status, // Use ENTER as default for children-only updates
+      employeeId: isChildrenOnlyUpdate ? '' : employeeId,
       roomId,
       childrenOver3: over3Count,
       childrenUnder3: under3Count,
@@ -117,41 +123,58 @@ const RoomUpdateForm: React.FC<RoomUpdateFormProps> = ({
       </h2>
       
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Status */}
+        {/* Update Type */}
         <div>
-          <label className="block text-care-lightText mb-2">Status</label>
+          <label className="block text-care-lightText mb-2">Update Type</label>
           <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as StatusType)}
+            value={isChildrenOnlyUpdate ? 'children' : 'staff'}
+            onChange={(e) => setIsChildrenOnlyUpdate(e.target.value === 'children')}
             className="w-full p-3 bg-care-green text-white rounded-md border border-care-accentGreen focus:border-care-brightGreen focus:outline-none focus:ring-1 focus:ring-care-brightGreen"
           >
-            <option value={StatusType.ENTER}>Enter</option>
-            <option value={StatusType.EXIT}>Exit</option>
+            <option value="staff">Staff Entry/Exit</option>
+            <option value="children">Children Count Only</option>
           </select>
         </div>
-        
-        {/* Employee Name */}
-        <div>
-          <label className="block text-care-lightText mb-2">Employee Name</label>
-          {staffError ? (
-            <div className="p-3 bg-yellow-800 text-yellow-100 rounded-md mb-2">
-              {staffError}
+
+        {!isChildrenOnlyUpdate && (
+          <>
+            {/* Status */}
+            <div>
+              <label className="block text-care-lightText mb-2">Status</label>
+              <select
+                value={status}
+                onChange={(e) => setStatus(e.target.value as StatusType)}
+                className="w-full p-3 bg-care-green text-white rounded-md border border-care-accentGreen focus:border-care-brightGreen focus:outline-none focus:ring-1 focus:ring-care-brightGreen"
+              >
+                <option value={StatusType.ENTER}>Enter</option>
+                <option value={StatusType.EXIT}>Exit</option>
+              </select>
             </div>
-          ) : (
-            <select
-              value={employeeId}
-              onChange={(e) => setEmployeeId(e.target.value)}
-              className="w-full p-3 bg-care-green text-white rounded-md border border-care-accentGreen focus:border-care-brightGreen focus:outline-none focus:ring-1 focus:ring-care-brightGreen"
-              disabled={availableEmployees.length === 0}
-            >
-              {availableEmployees.map((employee) => (
-                <option key={employee.id} value={employee.id}>
-                  {employee.name}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+            
+            {/* Employee Name */}
+            <div>
+              <label className="block text-care-lightText mb-2">Employee Name</label>
+              {staffError ? (
+                <div className="p-3 bg-yellow-800 text-yellow-100 rounded-md mb-2">
+                  {staffError}
+                </div>
+              ) : (
+                <select
+                  value={employeeId}
+                  onChange={(e) => setEmployeeId(e.target.value)}
+                  className="w-full p-3 bg-care-green text-white rounded-md border border-care-accentGreen focus:border-care-brightGreen focus:outline-none focus:ring-1 focus:ring-care-brightGreen"
+                  disabled={availableEmployees.length === 0}
+                >
+                  {availableEmployees.map((employee) => (
+                    <option key={employee.id} value={employee.id}>
+                      {employee.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          </>
+        )}
         
         {/* Room Name */}
         <div>
@@ -204,7 +227,7 @@ const RoomUpdateForm: React.FC<RoomUpdateFormProps> = ({
         <button
           type="submit"
           className="w-full p-3 bg-care-brightGreen hover:bg-care-hoverGreen text-white rounded-md transition-colors"
-          disabled={availableEmployees.length === 0}
+          disabled={!isChildrenOnlyUpdate && availableEmployees.length === 0}
         >
           Update Room
         </button>
